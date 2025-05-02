@@ -1,0 +1,402 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
+#include <memory>
+
+using namespace std;
+
+// Клас Жорсткий диск
+class HardDrive {
+private:
+    unsigned int sizeMB; // Розмір у мегабайтах
+
+public:
+    // Конструктори
+    HardDrive() : sizeMB(500) {
+        cout << "HardDrive default constructor called" << endl;
+    }
+    
+    explicit HardDrive(unsigned int size) : sizeMB(size) {
+        cout << "HardDrive parameterized constructor called" << endl;
+    }
+    
+    // Конструктор копіювання
+    HardDrive(const HardDrive& other) : sizeMB(other.sizeMB) {
+        cout << "HardDrive copy constructor called" << endl;
+    }
+    
+    // Деструктор
+    ~HardDrive() {
+        cout << "HardDrive destructor called" << endl;
+    }
+    
+    // Методи доступу
+    void setSizeMB(unsigned int size) {
+        sizeMB = size;
+    }
+    
+    unsigned int getSizeMB() const {
+        return sizeMB;
+    }
+    
+    // Метод для введення з клавіатури
+    void inputFromKeyboard() {
+        cout << "Enter hard drive size (MB): ";
+        cin >> sizeMB;
+    }
+    
+    // Метод для запису у файл
+    void saveToFile(ofstream& out) const {
+        out << sizeMB << " ";
+    }
+    
+    // Метод для читання з файлу
+    void loadFromFile(ifstream& in) {
+        in >> sizeMB;
+    }
+    
+    // Метод для генерації випадкових даних
+    void generateRandom() {
+        sizeMB = 128 + rand() % (2048 - 128 + 1); // Від 128 до 2048 МБ
+    }
+    
+    // Метод для виведення інформації
+    void print() const {
+        cout << "Hard Drive: " << sizeMB << " MB" << endl;
+    }
+};
+
+// Базовий клас Комп'ютер
+class Computer {
+protected:
+    unique_ptr<char[]> brand; // Марка комп'ютера
+    double price; // Ціна
+    HardDrive hd; // Жорсткий диск
+
+public:
+    // Конструктори
+    Computer() : brand(new char[1]{'\0'}), price(0) {
+        cout << "Computer default constructor called" << endl;
+    }
+    
+    Computer(const char* br, double pr, const HardDrive& drive) 
+        : brand(new char[strlen(br) + 1]), price(pr), hd(drive) {
+        strcpy(brand.get(), br);
+        cout << "Computer parameterized constructor called" << endl;
+    }
+    
+    // Конструктор копіювання
+    Computer(const Computer& other) 
+        : brand(new char[strlen(other.brand.get()) + 1]), price(other.price), hd(other.hd) {
+        strcpy(brand.get(), other.brand.get());
+        cout << "Computer copy constructor called" << endl;
+    }
+    
+    // Деструктор
+    virtual ~Computer() {
+        cout << "Computer destructor called" << endl;
+    }
+    
+    // Методи доступу
+    void setBrand(const char* br) {
+        brand.reset(new char[strlen(br) + 1]);
+        strcpy(brand.get(), br);
+    }
+    
+    const char* getBrand() const {
+        return brand.get();
+    }
+    
+    void setPrice(double pr) {
+        price = pr;
+    }
+    
+    double getPrice() const {
+        return price;
+    }
+    
+    void setHardDrive(const HardDrive& drive) {
+        hd = drive;
+    }
+    
+    HardDrive getHardDrive() const {
+        return hd;
+    }
+    
+    // Віртуальний метод для виведення інформації
+    virtual void print() const {
+        cout << "Computer Brand: " << brand.get() << endl;
+        cout << "Price: $" << price << endl;
+        hd.print();
+    }
+    
+    // Метод для введення з клавіатури
+    virtual void inputFromKeyboard() {
+        cout << "Enter computer brand: ";
+        string temp;
+        cin >> temp;
+        brand.reset(new char[temp.length() + 1]);
+        strcpy(brand.get(), temp.c_str());
+        
+        cout << "Enter computer price: ";
+        cin >> price;
+        
+        hd.inputFromKeyboard();
+    }
+    
+    // Метод для запису у файл
+    virtual void saveToFile(ofstream& out) const {
+        out << brand.get() << " " << price << " ";
+        hd.saveToFile(out);
+    }
+    
+    // Метод для читання з файлу
+    virtual void loadFromFile(ifstream& in) {
+        string temp;
+        in >> temp;
+        brand.reset(new char[temp.length() + 1]);
+        strcpy(brand.get(), temp.c_str());
+        
+        in >> price;
+        hd.loadFromFile(in);
+    }
+    
+    // Метод для генерації випадкових даних
+    virtual void generateRandom() {
+        const char* brands[] = {"Dell", "HP", "Lenovo", "Asus", "Acer"};
+        int brandIndex = rand() % 5;
+        brand.reset(new char[strlen(brands[brandIndex]) + 1]);
+        strcpy(brand.get(), brands[brandIndex]);
+        
+        price = 300 + rand() % 2000; // Від 300 до 2300 доларів
+        hd.generateRandom();
+    }
+};
+
+// Похідний клас ComputerWithMonitor (public успадкування)
+class ComputerWithMonitor : public Computer {
+private:
+    unsigned int monitorSize; // Розмір монітора в дюймах
+
+public:
+    // Конструктори
+    ComputerWithMonitor() : Computer(), monitorSize(15) {
+        cout << "ComputerWithMonitor default constructor called" << endl;
+    }
+    
+    ComputerWithMonitor(const char* br, double pr, const HardDrive& drive, unsigned int size)
+        : Computer(br, pr, drive), monitorSize(size) {
+        cout << "ComputerWithMonitor parameterized constructor called" << endl;
+    }
+    
+    // Деструктор
+    ~ComputerWithMonitor() override {
+        cout << "ComputerWithMonitor destructor called" << endl;
+    }
+    
+    // Методи доступу
+    void setMonitorSize(unsigned int size) {
+        monitorSize = size;
+    }
+    
+    unsigned int getMonitorSize() const {
+        return monitorSize;
+    }
+    
+    // Перевизначений метод для виведення інформації
+    void print() const override {
+        Computer::print();
+        cout << "Monitor Size: " << monitorSize << " inches" << endl;
+    }
+    
+    // Перевизначений метод для введення з клавіатури
+    void inputFromKeyboard() override {
+        Computer::inputFromKeyboard();
+        cout << "Enter monitor size (inches): ";
+        cin >> monitorSize;
+    }
+    
+    // Перевизначений метод для запису у файл
+    void saveToFile(ofstream& out) const override {
+        Computer::saveToFile(out);
+        out << monitorSize << " ";
+    }
+    
+    // Перевизначений метод для читання з файлу
+    void loadFromFile(ifstream& in) override {
+        Computer::loadFromFile(in);
+        in >> monitorSize;
+    }
+    
+    // Перевизначений метод для генерації випадкових даних
+    void generateRandom() override {
+        Computer::generateRandom();
+        monitorSize = 13 + rand() % (32 - 13 + 1); // Від 13 до 32 дюймів
+    }
+};
+
+// Функція для тестування класу HardDrive
+void testHardDrive() {
+    cout << "\n=== Testing HardDrive class ===\n";
+    
+    // Тест конструкторів
+    HardDrive hd1;
+    cout << "\nDefault hard drive:\n";
+    hd1.print();
+    
+    HardDrive hd2(1000);
+    cout << "\nParameterized hard drive:\n";
+    hd2.print();
+    
+    // Тест копіювання
+    HardDrive hd3 = hd2;
+    cout << "\nCopied hard drive:\n";
+    hd3.print();
+    
+    // Тест зміни розміру
+    hd3.setSizeMB(2000);
+    cout << "\nHard drive after size change:\n";
+    hd3.print();
+    
+    // Тест введення з клавіатури
+    cout << "\nEnter hard drive details:\n";
+    HardDrive hd4;
+    hd4.inputFromKeyboard();
+    cout << "\nHard drive from keyboard input:\n";
+    hd4.print();
+    
+    // Тест роботи з файлами
+    ofstream outFile("harddrive.txt");
+    hd2.saveToFile(outFile);
+    outFile.close();
+    
+    HardDrive hd5;
+    ifstream inFile("harddrive.txt");
+    hd5.loadFromFile(inFile);
+    inFile.close();
+    cout << "\nHard drive loaded from file:\n";
+    hd5.print();
+    
+    // Тест генерації випадкових даних
+    hd1.generateRandom();
+    cout << "\nHard drive with random data:\n";
+    hd1.print();
+}
+
+// Функція для тестування класу Computer
+void testComputer() {
+    cout << "\n=== Testing Computer class ===\n";
+    
+    // Тест конструкторів
+    Computer comp1;
+    cout << "\nDefault computer:\n";
+    comp1.print();
+    
+    HardDrive hd(500);
+    Computer comp2("Dell", 999.99, hd);
+    cout << "\nParameterized computer:\n";
+    comp2.print();
+    
+    // Тест копіювання
+    Computer comp3 = comp2;
+    cout << "\nCopied computer:\n";
+    comp3.print();
+    
+    // Тест зміни властивостей
+    comp3.setBrand("HP");
+    comp3.setPrice(799.99);
+    HardDrive newHd(1000);
+    comp3.setHardDrive(newHd);
+    cout << "\nComputer after changes:\n";
+    comp3.print();
+    
+    // Тест введення з клавіатури
+    cout << "\nEnter computer details:\n";
+    Computer comp4;
+    comp4.inputFromKeyboard();
+    cout << "\nComputer from keyboard input:\n";
+    comp4.print();
+    
+    // Тест роботи з файлами
+    ofstream outFile("computer.txt");
+    comp2.saveToFile(outFile);
+    outFile.close();
+    
+    Computer comp5;
+    ifstream inFile("computer.txt");
+    comp5.loadFromFile(inFile);
+    inFile.close();
+    cout << "\nComputer loaded from file:\n";
+    comp5.print();
+    
+    // Тест генерації випадкових даних
+    comp1.generateRandom();
+    cout << "\nComputer with random data:\n";
+    comp1.print();
+}
+
+// Функція для тестування класу ComputerWithMonitor
+void testComputerWithMonitor() {
+    cout << "\n=== Testing ComputerWithMonitor class ===\n";
+    
+    // Тест конструкторів
+    ComputerWithMonitor cwm1;
+    cout << "\nDefault computer with monitor:\n";
+    cwm1.print();
+    
+    HardDrive hd(1000);
+    ComputerWithMonitor cwm2("Lenovo", 1299.99, hd, 24);
+    cout << "\nParameterized computer with monitor:\n";
+    cwm2.print();
+    
+    // Тест зміни властивостей
+    cwm2.setBrand("Asus");
+    cwm2.setPrice(1499.99);
+    HardDrive newHd(2000);
+    cwm2.setHardDrive(newHd);
+    cwm2.setMonitorSize(27);
+    cout << "\nComputer with monitor after changes:\n";
+    cwm2.print();
+    
+    // Тест введення з клавіатури
+    cout << "\nEnter computer with monitor details:\n";
+    ComputerWithMonitor cwm3;
+    cwm3.inputFromKeyboard();
+    cout << "\nComputer with monitor from keyboard input:\n";
+    cwm3.print();
+    
+    // Тест роботи з файлами
+    ofstream outFile("computer_with_monitor.txt");
+    cwm2.saveToFile(outFile);
+    outFile.close();
+    
+    ComputerWithMonitor cwm4;
+    ifstream inFile("computer_with_monitor.txt");
+    cwm4.loadFromFile(inFile);
+    inFile.close();
+    cout << "\nComputer with monitor loaded from file:\n";
+    cwm4.print();
+    
+    // Тест генерації випадкових даних
+    cwm1.generateRandom();
+    cout << "\nComputer with monitor with random data:\n";
+    cwm1.print();
+    
+    // Тест поліморфізму
+    cout << "\nTesting polymorphism:\n";
+    Computer* comp = new ComputerWithMonitor("Acer", 899.99, HardDrive(750), 19);
+    comp->print();
+    delete comp;
+}
+
+int main() {
+    srand(time(0)); // Ініціалізація генератора випадкових чисел
+    
+    testHardDrive();
+    testComputer();
+    testComputerWithMonitor();
+    
+    return 0;
+}
