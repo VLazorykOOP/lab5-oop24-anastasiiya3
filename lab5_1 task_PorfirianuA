@@ -1,0 +1,266 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+// Базовий клас Вікно
+class Window {
+protected:
+    int x1, y1; // верхній лівий кут
+    int x2, y2; // нижній правий кут
+    string bgColor; // колір тла
+
+public:
+    // Конструктори
+    Window() : x1(0), y1(0), x2(100), y2(100), bgColor("white") {
+        cout << "Window default constructor called" << endl;
+    }
+    
+    Window(int x1, int y1, int x2, int y2, const string& color) 
+        : x1(x1), y1(y1), x2(x2), y2(y2), bgColor(color) {
+        cout << "Window parameterized constructor called" << endl;
+    }
+    
+    // Конструктор копіювання
+    Window(const Window& other) 
+        : x1(other.x1), y1(other.y1), x2(other.x2), y2(other.y2), bgColor(other.bgColor) {
+        cout << "Window copy constructor called" << endl;
+    }
+    
+    // Деструктор
+    virtual ~Window() {
+        cout << "Window destructor called" << endl;
+    }
+    
+    // Функція друку
+    virtual void print() const {
+        cout << "Window coordinates: (" << x1 << "," << y1 << ") to (" << x2 << "," << y2 << ")\n";
+        cout << "Background color: " << bgColor << endl;
+    }
+    
+    // Функції доступу
+    void setBackgroundColor(const string& color) {
+        bgColor = color;
+    }
+    
+    string getBackgroundColor() const {
+        return bgColor;
+    }
+    
+    // Функція для введення з клавіатури
+    virtual void inputFromKeyboard() {
+        cout << "Enter top-left x coordinate: ";
+        cin >> x1;
+        cout << "Enter top-left y coordinate: ";
+        cin >> y1;
+        cout << "Enter bottom-right x coordinate: ";
+        cin >> x2;
+        cout << "Enter bottom-right y coordinate: ";
+        cin >> y2;
+        cout << "Enter background color: ";
+        cin >> bgColor;
+    }
+    
+    // Функція для запису у файл
+    virtual void saveToFile(const string& filename) const {
+        ofstream out(filename);
+        if (out) {
+            out << x1 << " " << y1 << " " << x2 << " " << y2 << " " << bgColor;
+        }
+        out.close();
+    }
+    
+    // Функція для читання з файлу
+    virtual void loadFromFile(const string& filename) {
+        ifstream in(filename);
+        if (in) {
+            in >> x1 >> y1 >> x2 >> y2 >> bgColor;
+        }
+        in.close();
+    }
+    
+    // Функція для генерації випадкових даних
+    virtual void generateRandom() {
+        x1 = rand() % 100;
+        y1 = rand() % 100;
+        x2 = x1 + 10 + rand() % 100;
+        y2 = y1 + 10 + rand() % 100;
+        
+        const string colors[] = {"white", "black", "red", "green", "blue", "yellow"};
+        bgColor = colors[rand() % 6];
+    }
+};
+
+// Похідний клас Вікно з меню
+class WindowWithMenu : public Window {
+private:
+    string menuText;
+
+public:
+    // Конструктори
+    WindowWithMenu() : Window(), menuText("File Edit View") {
+        cout << "WindowWithMenu default constructor called" << endl;
+    }
+    
+    WindowWithMenu(int x1, int y1, int x2, int y2, const string& color, const string& menu)
+        : Window(x1, y1, x2, y2, color), menuText(menu) {
+        cout << "WindowWithMenu parameterized constructor called" << endl;
+    }
+    
+    // Деструктор
+    ~WindowWithMenu() override {
+        cout << "WindowWithMenu destructor called" << endl;
+    }
+    
+    // Функція друку
+    void print() const override {
+        Window::print();
+        cout << "Menu text: " << menuText << endl;
+    }
+    
+    // Функції доступу
+    void setMenuText(const string& text) {
+        menuText = text;
+    }
+    
+    string getMenuText() const {
+        return menuText;
+    }
+    
+    // Функція для введення з клавіатури
+    void inputFromKeyboard() override {
+        Window::inputFromKeyboard();
+        cout << "Enter menu text: ";
+        cin.ignore();
+        getline(cin, menuText);
+    }
+    
+    // Функція для запису у файл
+    void saveToFile(const string& filename) const override {
+        ofstream out(filename);
+        if (out) {
+            out << x1 << " " << y1 << " " << x2 << " " << y2 << " " << bgColor << " ";
+            out << menuText;
+        }
+        out.close();
+    }
+    
+    // Функція для читання з файлу
+    void loadFromFile(const string& filename) override {
+        ifstream in(filename);
+        if (in) {
+            in >> x1 >> y1 >> x2 >> y2 >> bgColor;
+            in.ignore();
+            getline(in, menuText);
+        }
+        in.close();
+    }
+    
+    // Функція для генерації випадкових даних
+    void generateRandom() override {
+        Window::generateRandom();
+        
+        const string menus[] = {"File Edit View", "Home Insert Layout", "Tools Help", "Options Settings"};
+        menuText = menus[rand() % 4];
+    }
+};
+
+// Функція для тестування класу Window
+void testWindow() {
+    cout << "\n=== Testing Window class ===\n";
+    
+    // Тест конструкторів
+    Window w1;
+    cout << "\nDefault window:\n";
+    w1.print();
+    
+    Window w2(10, 20, 200, 300, "blue");
+    cout << "\nParameterized window:\n";
+    w2.print();
+    
+    // Тест копіювання
+    Window w3 = w2;
+    cout << "\nCopied window:\n";
+    w3.print();
+    
+    // Тест зміни кольору
+    w3.setBackgroundColor("red");
+    cout << "\nWindow after color change:\n";
+    w3.print();
+    
+    // Тест введення з клавіатури
+    cout << "\nEnter window details:\n";
+    Window w4;
+    w4.inputFromKeyboard();
+    cout << "\nWindow from keyboard input:\n";
+    w4.print();
+    
+    // Тест роботи з файлами
+    w2.saveToFile("window.txt");
+    Window w5;
+    w5.loadFromFile("window.txt");
+    cout << "\nWindow loaded from file:\n";
+    w5.print();
+    
+    // Тест генерації випадкових даних
+    w1.generateRandom();
+    cout << "\nWindow with random data:\n";
+    w1.print();
+}
+
+// Функція для тестування класу WindowWithMenu
+void testWindowWithMenu() {
+    cout << "\n=== Testing WindowWithMenu class ===\n";
+    
+    // Тест конструкторів
+    WindowWithMenu wm1;
+    cout << "\nDefault window with menu:\n";
+    wm1.print();
+    
+    WindowWithMenu wm2(5, 15, 150, 250, "green", "Home Insert Page Layout");
+    cout << "\nParameterized window with menu:\n";
+    wm2.print();
+    
+    // Тест зміни кольору та меню
+    wm2.setBackgroundColor("yellow");
+    wm2.setMenuText("New Menu Text");
+    cout << "\nWindow with menu after changes:\n";
+    wm2.print();
+    
+    // Тест введення з клавіатури
+    cout << "\nEnter window with menu details:\n";
+    WindowWithMenu wm3;
+    wm3.inputFromKeyboard();
+    cout << "\nWindow with menu from keyboard input:\n";
+    wm3.print();
+    
+    // Тест роботи з файлами
+    wm2.saveToFile("window_with_menu.txt");
+    WindowWithMenu wm4;
+    wm4.loadFromFile("window_with_menu.txt");
+    cout << "\nWindow with menu loaded from file:\n";
+    wm4.print();
+    
+    // Тест генерації випадкових даних
+    wm1.generateRandom();
+    cout << "\nWindow with menu with random data:\n";
+    wm1.print();
+    
+    // Тест поліморфізму
+    cout << "\nTesting polymorphism:\n";
+    Window* w = new WindowWithMenu(0, 0, 100, 100, "gray", "Polymorphic Menu");
+    w->print();
+    delete w;
+}
+
+int main() {
+    srand(time(0)); // Ініціалізація генератора випадкових чисел
+    
+    testWindow();
+    testWindowWithMenu();
+    
+    return 0;
+}
