@@ -1,0 +1,163 @@
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+// Клас Жорсткий диск
+class HardDrive {
+private:
+    unsigned int sizeMB; // обсяг у мегабайтах
+
+public:
+    // Конструктори
+    HardDrive() : sizeMB(0) {}
+    HardDrive(unsigned int size) : sizeMB(size) {}
+    
+    // Метод доступу
+    unsigned int getSize() const { return sizeMB; }
+    void setSize(unsigned int size) { sizeMB = size; }
+};
+
+// Базовий клас Комп'ютер
+class Computer {
+protected:
+    HardDrive hd; // композиція - комп'ютер містить жорсткий диск
+    char* brand;  // марка комп'ютера
+    double price; // ціна
+
+public:
+    // Конструктори
+    Computer() : brand(nullptr), price(0) {}
+    
+    Computer(const char* br, double pr, unsigned int hdSize) 
+        : hd(hdSize), price(pr) {
+        brand = new char[strlen(br) + 1];
+        strcpy(brand, br);
+    }
+    
+    // Деструктор
+    virtual ~Computer() {
+        delete[] brand;
+        cout << "Computer destructor called" << endl;
+    }
+    
+    // Функція друку
+    virtual void print() const {
+        cout << "Computer brand: " << (brand ? brand : "N/A") << endl;
+        cout << "Price: $" << price << endl;
+        cout << "Hard drive size: " << hd.getSize() << " MB" << endl;
+    }
+};
+
+// Public похідний клас ComputerWithMonitor
+class ComputerWithMonitor : public Computer {
+private:
+    double monitorSize; // розмір монітора в дюймах
+
+public:
+    // Конструктори
+    ComputerWithMonitor() : Computer(), monitorSize(0) {}
+    
+    ComputerWithMonitor(const char* br, double pr, unsigned int hdSize, double mSize)
+        : Computer(br, pr, hdSize), monitorSize(mSize) {}
+    
+    // Деструктор
+    ~ComputerWithMonitor() override {
+        cout << "ComputerWithMonitor destructor called" << endl;
+    }
+    
+    // Функція друку
+    void print() const override {
+        Computer::print();
+        cout << "Monitor size: " << monitorSize << " inches" << endl;
+    }
+};
+
+// Private похідний клас ComputerWithMonitorPrivate
+class ComputerWithMonitorPrivate : private Computer {
+private:
+    double monitorSize;
+
+public:
+    // Конструктори
+    ComputerWithMonitorPrivate() : Computer(), monitorSize(0) {}
+    
+    ComputerWithMonitorPrivate(const char* br, double pr, unsigned int hdSize, double mSize)
+        : Computer(br, pr, hdSize), monitorSize(mSize) {}
+    
+    // Деструктор
+    ~ComputerWithMonitorPrivate() {
+        cout << "ComputerWithMonitorPrivate destructor called" << endl;
+    }
+    
+    // Функція друку
+    void print() const {
+        Computer::print();
+        cout << "Monitor size: " << monitorSize << " inches" << endl;
+    }
+    
+    // Методи доступу до базових полів (оскільки наслідування private)
+    void setBrand(const char* br) {
+        delete[] brand;
+        brand = new char[strlen(br) + 1];
+        strcpy(brand, br);
+    }
+    
+    const char* getBrand() const { return brand; }
+    double getPrice() const { return price; }
+    void setPrice(double pr) { price = pr; }
+    unsigned int getHdSize() const { return hd.getSize(); }
+    void setHdSize(unsigned int size) { hd.setSize(size); }
+};
+
+// Функція для тестування
+void testComputerClasses() {
+    cout << "=== Testing base Computer class ===" << endl;
+    Computer comp1;
+    Computer comp2("Dell", 799.99, 512000);
+    
+    cout << "\nComputer 1 (default):" << endl;
+    comp1.print();
+    
+    cout << "\nComputer 2 (custom):" << endl;
+    comp2.print();
+    
+    cout << "\n=== Testing public derived ComputerWithMonitor class ===" << endl;
+    ComputerWithMonitor cwm1;
+    ComputerWithMonitor cwm2("HP", 999.99, 1024000, 15.6);
+    
+    cout << "\nComputer with monitor 1 (default):" << endl;
+    cwm1.print();
+    
+    cout << "\nComputer with monitor 2 (custom):" << endl;
+    cwm2.print();
+    
+    cout << "\n=== Testing private derived ComputerWithMonitorPrivate class ===" << endl;
+    ComputerWithMonitorPrivate cwmp1;
+    ComputerWithMonitorPrivate cwmp2("Lenovo", 899.99, 256000, 17.3);
+    
+    cout << "\nComputer with monitor private 1 (default):" << endl;
+    cwmp1.print();
+    
+    cout << "\nComputer with monitor private 2 (custom):" << endl;
+    cwmp2.print();
+    
+    // Демонстрація різниці між public і private наслідуванням
+    cout << "\nTesting access differences:" << endl;
+    
+    // Public наслідування - можна використовувати методи Computer
+    ComputerWithMonitor* pubComp = new ComputerWithMonitor("Asus", 1099.99, 512000, 14.0);
+    pubComp->print();  // OK
+    delete pubComp;
+    
+    // Private наслідування - методи Computer недоступні ззовні
+    ComputerWithMonitorPrivate* privComp = new ComputerWithMonitorPrivate();
+    // privComp->print(); // Це працює, бо ми перевизначили метод
+    // privComp->Computer::print(); // Помилка - доступ заборонений
+    delete privComp;
+}
+
+int main() {
+    testComputerClasses();
+    return 0;
+}
